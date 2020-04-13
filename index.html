@@ -1,1 +1,41 @@
+
+
 <h1>Hellop!</h1>
+<body>    
+<div class="playarea" style="width: 300px; height: 300px; background-color: green;">
+    <div class="playarea" 
+    style="width: 12px; 
+    height: 24px;
+    background-color: 
+    black;"    
+    >    
+    </div>
+</div>
+<p class="score">Score:</p>
+</body>
+<script>
+let score = 0; 
+const div = document.querySelector('.playarea');
+console.log(div);
+
+function printCords(e){
+    console.log(e.offsetX, e.offsetY);
+}
+
+
+
+function updateScore()
+{
+    score++;
+    const scoreText = document.querySelector('p');
+    //.innerText(`Score:${score}`);;
+    console.log(scoreText);
+    //scoreText.innerText(`Score:${score}`);
+    // document.querySelector('.score').innerHTML(`Score:${score}`);
+    // console.log(score);
+}
+
+div.addEventListener('mousemove', printCords);
+updateScore();
+
+</script>
