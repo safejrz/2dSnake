@@ -1,41 +1,198 @@
+<style>
+    h1 {
+        text-shadow: 10px 10px 0 rgba(0, 0, 0, 0);
+        transition: all 0.9s;
+    }
 
+    html {
+        margin: 20px;
+    }
 
-<h1>Hellop!</h1>
-<body>    
-<div class="playarea" style="width: 300px; height: 300px; background-color: green;">
-    <div class="playarea" 
-    style="width: 12px; 
-    height: 24px;
-    background-color: 
-    black;"    
-    >    
-    </div>
+    .scoreP {
+        margin-left: 123px;
+        font-weight: bolder;
+        color: red;
+    }
+
+    .playarea {
+        border: 1px solid black;
+        background-color: lime;
+    }
+
+    .hero {
+        font-family: sans-serif;
+        display: flex;
+        color: black;
+    }
+
+    .instructions{
+        font-style: italic;        
+    }
+</style>
+
+<div class="hero">
+    <h1>RETRO SNAKE❗❗❗</h1>
 </div>
-<p class="score">Score:</p>
+
+<body>
+    <p class="scoreP">Score:</p>
+    <canvas width="300" height="300" class="playarea">
+    </canvas>
+    <br />
+    <br />
+    <p class="instructions">Use the <b>arrows to move</b> the snake and catch the numbers.</p>
+    <p class="instructions">Use <b>space to restart</b> the game.</p>
 </body>
+
 <script>
-let score = 0; 
-const div = document.querySelector('.playarea');
-console.log(div);
+    let score = 0;
+    let direction = [1, 0];
+    let snake = [[4, 4]];
+    let food = [];
+    let refreshInterval = 250; // decreasing should increase speed
 
-function printCords(e){
-    console.log(e.offsetX, e.offsetY);
-}
+    const canvas = document.querySelector('.playarea');
+    let ctx = canvas.getContext('2d');
+    ctx.scale(10, 10);
 
+    let gameInterval;
+    let titleInterval;
 
+    function move(e) {
+        switch (e.which) {
+            case 32:
+                restartGame();
+                break;
+            case 37:
+                console.log('◄'); // ◄ 17 / ← 27
+                direction = [-1, 0];
+                break;
+            case 38:
+                console.log('▲'); // ▲ 30 / ↑ 24
+                direction = [0, -1];
+                break;
+            case 39:
+                console.log('►'); // ► 16 / → 26
+                direction = [1, 0];
+                break;
+            case 40:
+                console.log('▼'); // ▼ 31 / ↓ 25
+                direction = [0, 1];
+                break;
+            default:
+                return;
+        }
+    }
 
-function updateScore()
-{
-    score++;
-    const scoreText = document.querySelector('p');
-    //.innerText(`Score:${score}`);;
-    console.log(scoreText);
-    //scoreText.innerText(`Score:${score}`);
-    // document.querySelector('.score').innerHTML(`Score:${score}`);
-    // console.log(score);
-}
+    canvas.addEventListener('click', addPoint);
+    document.addEventListener("keydown", move);
 
-div.addEventListener('mousemove', printCords);
-updateScore();
+    function gameOver() {
+        //unsuscribe from events;
+        clearInterval(titleInterval);
+        clearInterval(gameInterval);
+        displayGameOver();
+        clearShadowTitle();
+    }
 
+    function startGame() {
+        let now = new Date();
+        console.log(`Game started ${now.getHours()}:${now.getMinutes()}:${now.getSeconds()}`);
+        clearPlayArea();
+        displayScore();
+        titleInterval = setInterval(moveShadowTitle, 1000);
+        gameInterval = setInterval(validateSnake, refreshInterval);
+    }
+
+    function validateSnake() {        
+        const nextX = snake[0][0] + direction[0];
+        const nextY = snake[0][1] + direction[1];
+        if (snake.find(([x, y]) => x == nextX && y == nextY) ||
+            ((nextX >= 30 || nextX < 0) || (nextY >= 30 || nextY < 0))
+        ) {
+            let now = new Date();
+            console.log(`Game Over :( ${now.getHours()}:${now.getMinutes()}:${now.getSeconds()}`);            
+            return gameOver();
+        } else {
+            snake.unshift([nextX, nextY]); // add new element to the snake
+            snake.pop(); // dispose of the last element
+        }
+
+        drawSnake();       
+    }
+
+    function drawSnake() {
+        clearPlayArea();        
+        
+        ctx.fillStyle = "black";
+
+        snake.forEach(([x, y]) => { ctx.fillRect(x, y, 1, 1) });
+    }
+
+    function clearPlayArea() {
+        ctx.clearRect(0, 0, 300, 300);
+    }
+
+    function restartGame() {
+        gameOver();
+
+        //restart variables
+        score = 0;        
+        direction = [1, 0];
+        snake = [[4, 4]];
+        food = [];
+        startGame();
+    }
+
+    function displayScore() {
+        const scoreText = document.querySelector('.scoreP');
+        scoreText.innerText = `Score:${score}`;
+    }
+
+    function addPoint() {
+        score++; 
+        displayScore();
+    }
+
+    function moveShadowTitle() {
+        const hero = document.querySelector('.hero');
+        const text = hero.querySelector('h1');
+        const walk = 40;
+
+        let now = new Date();
+        let seconds = now.getSeconds();
+        if (seconds > 30) {
+            seconds = 30 - (seconds - 30);
+        }
+        let negativeSeconds = -1 * seconds;
+
+        const { offsetWidth: width, offsetHeight: height } = hero;
+        const xWalk = Math.round((seconds / width * walk) + (walk / 20)); //- (walk / 2)
+        const yWalk = Math.round((negativeSeconds / height * walk) + (walk / 10)); //- (walk / 2)
+        const xNWalk = -1.2 * Math.round((seconds / width * walk) - (walk / 10));
+        const yNWalk = -1 * Math.round((negativeSeconds / height * walk) - (walk / 20));
+
+        text.style.textShadow = `
+      ${xWalk}px ${yWalk}px 0 rgba(255, 255, 0, .7),
+      ${yWalk}px ${xWalk}px 0 rgba(0, 255, 0, .7),
+      ${yNWalk}px ${xNWalk}px 0 rgba(0, 255, 255, .7),
+      ${xNWalk}px ${Math.round(yNWalk / 2)}px 0 rgba(255, 0, 255, .7)
+      `;
+    }
+
+    function clearShadowTitle(){
+        const hero = document.querySelector('.hero');
+        const text = hero.querySelector('h1');
+        text.style.textShadow = "10px 10px 0 rgba(0, 0, 0, 0)";
+    }
+
+    function displayGameOver(){
+        ctx.clearRect(0, 0, 300, 300);
+        ctx.font = "3px Arial Black";
+        ctx.fillStyle = "rgb(255, 0, 0)";
+        ctx.textAlign = "center";
+        ctx.fillText("Game Over!", 15, 15);
+    }
+
+    startGame();
 </script>
