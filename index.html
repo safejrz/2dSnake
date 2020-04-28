@@ -8,10 +8,10 @@
         margin: 20px;
     }
 
-    .scoreP {
-        margin-left: 123px;
+    .scoreLabel {
         font-weight: bolder;
         color: red;
+        text-align: right;
     }
 
     .playarea {
@@ -19,41 +19,52 @@
         background-color: lime;
     }
 
-    .hero {
+    .title {
         font-family: sans-serif;
         display: flex;
         color: black;
+
     }
 
-    .instructions{
-        font-style: italic;        
+    .instructions {
+        font-style: italic;
     }
 </style>
-
-<div class="hero">
-    <h1>RETRO SNAKE❗❗❗</h1>
+<meta charset="UTF-8">
+<div class="title">
+    <h1>RETRO SNAKE ❗❗❗</h1>
 </div>
 
 <body>
-    <p class="scoreP">Score:</p>
+    <label class="scoreLabel">Score:</label>
+    <p></p>
     <canvas width="300" height="300" class="playarea">
     </canvas>
     <br />
     <br />
-    <p class="instructions">Use the <b>arrows to move</b> the snake and catch the numbers.</p>
-    <p class="instructions">Use <b>space to restart</b> the game.</p>
+    <p class="instructions">
+        Use the <b>ARROWS to MOVE</b> the snake to the food.<br />
+        Use <b>SPACE to RESTART</b> the game.
+    </p>
 </body>
 
 <script>
+    const scale = 10;
+    const emojiSize = 2;
+    let xPadding = 0;
+    let level = 0;
     let score = 0;
     let direction = [1, 0];
-    let snake = [[4, 4]];
-    let food = [];
+    let snake = [[6, 4], [5, 4], [4, 4]];
+    let foodCoords = [];
+    let foodEmoji;
     let refreshInterval = 250; // decreasing should increase speed
 
     const canvas = document.querySelector('.playarea');
     let ctx = canvas.getContext('2d');
-    ctx.scale(10, 10);
+    ctx.scale(scale, scale);
+    const maxX = canvas.width / scale;
+    const maxY = canvas.height / scale;
 
     let gameInterval;
     let titleInterval;
@@ -63,100 +74,244 @@
             case 32:
                 restartGame();
                 break;
-            case 37:
-                console.log('◄'); // ◄ 17 / ← 27
+            case 37: // ◄ 17 / ← 27                
+                if (direction[0] === 1 && direction[1] === 0) {
+                    break;
+                }
+                console.log('◄');
                 direction = [-1, 0];
                 break;
-            case 38:
-                console.log('▲'); // ▲ 30 / ↑ 24
+            case 38: // ▲ 30 / ↑ 24                
+                if (direction[0] === 0 && direction[1] === 1) {
+                    break;
+                }
+                console.log('▲');
                 direction = [0, -1];
                 break;
-            case 39:
-                console.log('►'); // ► 16 / → 26
+            case 39: // ► 16 / → 26                
+                if (direction[0] === -1 && direction[1] === 0) {
+                    break;
+                }
+                console.log('►');
                 direction = [1, 0];
                 break;
-            case 40:
-                console.log('▼'); // ▼ 31 / ↓ 25
+            case 40: // ▼ 31 / ↓ 25                
+                if (direction[0] === 0 && direction[1] === -1) {
+                    break;
+                }
+                console.log('▼');
                 direction = [0, 1];
                 break;
             default:
-                return;
+                break;
         }
     }
 
-    canvas.addEventListener('click', addPoint);
-    document.addEventListener("keydown", move);
-
-    function gameOver() {
-        //unsuscribe from events;
+    function stopGame() {
         clearInterval(titleInterval);
         clearInterval(gameInterval);
-        displayGameOver();
-        clearShadowTitle();
     }
 
-    function startGame() {
+    function gameOver() {
+        stopGame();
+        displayGameOver();
+        clearShadowTitle();
+        xPadding = 1;
+        let now = new Date();
+        console.log(`Game Over :( ${now.getHours()}:${now.getMinutes()}:${now.getSeconds()}`);
+    }
+
+    function startGame() {        
+        clearPlayArea();
+        resumeGame();
+    }
+
+    function resumeGame() {
         let now = new Date();
         console.log(`Game started ${now.getHours()}:${now.getMinutes()}:${now.getSeconds()}`);
-        clearPlayArea();
         displayScore();
+        generateNextFood();
         titleInterval = setInterval(moveShadowTitle, 1000);
         gameInterval = setInterval(validateSnake, refreshInterval);
     }
 
-    function validateSnake() {        
+    function restartGame() {
+        stopGame();
+        resetVariables();        
+        startGame();
+    }
+
+    function resetVariables() {
+        level = 0;
+        score = 0;
+        direction = [1, 0];
+        snake = [[6, 4], [5, 4], [4, 4]];
+        foodCoords = [];
+        refreshInterval = 250; // decreasing value will increase speed
+    }
+
+    function validateSnake() {
         const nextX = snake[0][0] + direction[0];
         const nextY = snake[0][1] + direction[1];
-        if (snake.find(([x, y]) => x == nextX && y == nextY) ||
-            ((nextX >= 30 || nextX < 0) || (nextY >= 30 || nextY < 0))
+
+        if (snake.find(([x, y]) => x == nextX && y == nextY) || //snake eating itself!
+            ((nextX >= maxX || nextX <= -1) || (nextY >= maxY || nextY <= -1)) //snake out of play area!
         ) {
-            let now = new Date();
-            console.log(`Game Over :( ${now.getHours()}:${now.getMinutes()}:${now.getSeconds()}`);            
             return gameOver();
+        }
+
+        snake.unshift([nextX, nextY]); // add new element to the snake
+
+        // Food behavior
+        if (nextX == foodCoords[0] && nextY == foodCoords[1]
+            || nextX == foodCoords[0] + 1 && nextY == foodCoords[1]
+            || nextX == foodCoords[0] && nextY == foodCoords[1] + 1
+            || nextX == foodCoords[0] + 1 && nextY == foodCoords[1] + 1
+        ) {
+            stopGame();
+            level++;
+            if(level < 15) {
+            refreshInterval = Math.round(refreshInterval * 0.87);
+            }
+            resumeGame();            
         } else {
-            snake.unshift([nextX, nextY]); // add new element to the snake
             snake.pop(); // dispose of the last element
         }
 
-        drawSnake();       
+        //draw next game frame
+        displaySnake();
+        displayFood();
     }
 
-    function drawSnake() {
-        clearPlayArea();        
-        
+    function displaySnake() {
+        clearPlayArea();
         ctx.fillStyle = "black";
-
         snake.forEach(([x, y]) => { ctx.fillRect(x, y, 1, 1) });
     }
 
     function clearPlayArea() {
-        ctx.clearRect(0, 0, 300, 300);
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
     }
 
-    function restartGame() {
-        gameOver();
+    function generateNextFood() {
+        foodEmoji = getRandomFoodEmoji();
+        console.log(foodEmoji);
+        do {
+            foodCoords = [Math.round(Math.random() * (maxX - emojiSize - xPadding)), Math.round(Math.random() * (maxY - emojiSize))];
+        }
+        while (snake.find(([x, y]) => x == foodCoords[0] && y == foodCoords[1]
+            || x == foodCoords[0] + 1 && y == foodCoords[1]
+            || x == foodCoords[0] && y == foodCoords[1] + 1
+            || x == foodCoords[0] + 1 && y == foodCoords[1] + 1));
 
-        //restart variables
-        score = 0;        
-        direction = [1, 0];
-        snake = [[4, 4]];
-        food = [];
-        startGame();
+        displayFood();
     }
 
-    function displayScore() {
-        const scoreText = document.querySelector('.scoreP');
-        scoreText.innerText = `Score:${score}`;
-    }
-
-    function addPoint() {
-        score++; 
-        displayScore();
+    function getRandomFoodEmoji() {
+        const fruitNumber = Math.round(Math.random() * (44));
+        switch (fruitNumber) {
+            //fruits
+            case 1:
+                return "🍇";
+            case 2:
+                return "🍈";
+            case 3:
+                return "🍉";
+            case 4:
+                return "🍊";
+            case 5:
+                return "🍋";
+            case 6:
+                return "🍌";
+            case 7:
+                return "🍍";
+            case 8:
+                return "🥭";
+            case 9:
+                return "🍎";
+            case 10:
+                return "🍏";
+            case 11:
+                return "🍐";
+            case 12:
+                return "🍑";
+            case 13:
+                return "🍒";
+            case 14:
+                return "🍓";
+            case 15:
+                return "🥝";
+            case 16:
+                return "🍅";
+            case 17:
+                return "🥥";
+            //vegetables
+            case 18:
+                return "🥕";
+            case 19:
+                return "🥔";
+            case 20:
+                return "🥦";
+            case 21:
+                return "🍄";
+            //snacks
+            case 22:
+                return "🌮";
+            case 23:
+                return "🥪";
+            case 24:
+                return "🌯";
+            case 25:
+                return "🌭";
+            case 26:
+                return "🍕";
+            case 27:
+                return "🍝";
+            case 28:
+                return "🥡";
+            case 29:
+                return "🥟";
+            //meat
+            case 30:
+                return "🥩";
+            case 31:
+                return "🥓";
+            case 32:
+                return "🍗";
+            case 33:
+                //bread
+                return "🥨";
+            case 34:
+                return "🍩";
+            case 35:
+                return "🍪";
+            case 36:
+                return "🍰";
+            case 37:
+                return "🧁";
+            case 38:
+                return "🍫";
+            case 39:
+                return "🍦";
+            //seafood
+            case 40:
+                return "🍤";
+            case 41:
+                return "🦑";
+            case 42:
+                return "🦞";
+            case 43:
+                return "🦀";
+            case 44:
+                return "🍣";
+            default:
+                return "💩";
+        }
     }
 
     function moveShadowTitle() {
-        const hero = document.querySelector('.hero');
-        const text = hero.querySelector('h1');
+        const title = document.querySelector('.title');
+        const text = title.querySelector('h1');
         const walk = 40;
 
         let now = new Date();
@@ -164,9 +319,10 @@
         if (seconds > 30) {
             seconds = 30 - (seconds - 30);
         }
+
         let negativeSeconds = -1 * seconds;
 
-        const { offsetWidth: width, offsetHeight: height } = hero;
+        const { offsetWidth: width, offsetHeight: height } = title;
         const xWalk = Math.round((seconds / width * walk) + (walk / 20)); //- (walk / 2)
         const yWalk = Math.round((negativeSeconds / height * walk) + (walk / 10)); //- (walk / 2)
         const xNWalk = -1.2 * Math.round((seconds / width * walk) - (walk / 10));
@@ -180,19 +336,43 @@
       `;
     }
 
-    function clearShadowTitle(){
-        const hero = document.querySelector('.hero');
-        const text = hero.querySelector('h1');
+    function clearShadowTitle() {
+        const title = document.querySelector('.title');
+        const text = title.querySelector('h1');
         text.style.textShadow = "10px 10px 0 rgba(0, 0, 0, 0)";
     }
 
-    function displayGameOver(){
-        ctx.clearRect(0, 0, 300, 300);
-        ctx.font = "3px Arial Black";
-        ctx.fillStyle = "rgb(255, 0, 0)";
-        ctx.textAlign = "center";
-        ctx.fillText("Game Over!", 15, 15);
+    function displayScore() {
+        const scoreText = document.querySelector('.scoreLabel');        
+        if (level <= 1) {
+            score = level * 100;
+        } else {
+            score = Math.round(score * 1.1 + 100);
+        }
+
+        scoreText.innerText = `Score:${score}`;
     }
 
+    function displayFood() {
+        ctx.font = `${emojiSize}px Arial`;
+        ctx.textBaseline = "middle";
+        //displayWhiteRectangle(); // uncomment to debbug for padding errors.
+        ctx.fillText(foodEmoji, foodCoords[0] + xPadding, foodCoords[1] + 1, emojiSize);
+    }
+
+    function displayWhiteRectangle() {
+        ctx.fillStyle = "rgb(255, 255, 255)";
+        ctx.fillRect(foodCoords[0], foodCoords[1], emojiSize, emojiSize)
+    }
+
+    function displayGameOver() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.font = "4px Arial Black";
+        ctx.fillStyle = "rgb(255, 0, 0)";
+        ctx.textAlign = "center";
+        ctx.fillText("Game Over!", Math.round(maxX / 2), Math.round(maxY / 2));
+    }
+
+    document.addEventListener("keydown", move);
     startGame();
 </script>
