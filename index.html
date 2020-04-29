@@ -14,23 +14,44 @@
         text-align: right;
     }
 
+    .image {
+        border: none;
+        position: relative;
+        z-index: -1;
+    }
+
     .playarea {
+        margin-top: -300px;
         border: 1px solid black;
-        background-color: lime;
+        background-color: green;
+        transition: all 0.2s;
+    }
+
+    .playarea.gameover {
+        margin-top: -300px;
+        position: relative;
+        border: none;
+        background-color: transparent;
+        transition: all 1s;
+    }
+
+    .container {
+        display: inline-block;
+        width: 300;
+        height: 300;
+        position: relative;
     }
 
     .title {
         font-family: sans-serif;
         display: flex;
         color: black;
-
     }
 
     .instructions {
         font-style: italic;
     }
 </style>
-<meta charset="UTF-8">
 <div class="title">
     <h1>RETRO SNAKE ❗❗❗</h1>
 </div>
@@ -38,8 +59,10 @@
 <body>
     <label class="scoreLabel">Score:</label>
     <p></p>
-    <canvas width="300" height="300" class="playarea">
-    </canvas>
+    <div class="container">
+        <img class="image" src="Meme.gif" width="300" height="300" />
+        <canvas width="300" height="300" class="playarea"></canvas>
+    </div>
     <br />
     <br />
     <p class="instructions">
@@ -114,6 +137,7 @@
 
     function gameOver() {
         stopGame();
+        canvas.classList.add('gameover');
         displayGameOver();
         clearShadowTitle();
         xPadding = 1;
@@ -121,7 +145,8 @@
         console.log(`Game Over :( ${now.getHours()}:${now.getMinutes()}:${now.getSeconds()}`);
     }
 
-    function startGame() {        
+    function startGame() {
+        canvas.classList.remove('gameover');
         clearPlayArea();
         resumeGame();
     }
@@ -137,7 +162,7 @@
 
     function restartGame() {
         stopGame();
-        resetVariables();        
+        resetVariables();
         startGame();
     }
 
@@ -170,10 +195,10 @@
         ) {
             stopGame();
             level++;
-            if(level < 15) {
-            refreshInterval = Math.round(refreshInterval * 0.87);
+            if (level < 15) {
+                refreshInterval = Math.round(refreshInterval * 0.87);
             }
-            resumeGame();            
+            resumeGame();
         } else {
             snake.pop(); // dispose of the last element
         }
@@ -185,7 +210,7 @@
 
     function displaySnake() {
         clearPlayArea();
-        ctx.fillStyle = "black";
+        ctx.fillStyle = "yellow";
         snake.forEach(([x, y]) => { ctx.fillRect(x, y, 1, 1) });
     }
 
@@ -208,7 +233,7 @@
     }
 
     function getRandomFoodEmoji() {
-        const fruitNumber = Math.round(Math.random() * (44));
+        const fruitNumber = Math.ceil(Math.random() * (44));
         switch (fruitNumber) {
             //fruits
             case 1:
@@ -278,8 +303,8 @@
                 return "🥓";
             case 32:
                 return "🍗";
+            //bread
             case 33:
-                //bread
                 return "🥨";
             case 34:
                 return "🍩";
@@ -343,7 +368,7 @@
     }
 
     function displayScore() {
-        const scoreText = document.querySelector('.scoreLabel');        
+        const scoreText = document.querySelector('.scoreLabel');
         if (level <= 1) {
             score = level * 100;
         } else {
@@ -368,9 +393,13 @@
     function displayGameOver() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.font = "4px Arial Black";
+        ctx.fillStyle = "rgb(255, 255, 0)";
+        ctx.textAlign = "center";
+        ctx.fillText("Game Over!", Math.ceil(maxX/2), Math.ceil(23));
+        ctx.font = "4.1px Arial Black";
         ctx.fillStyle = "rgb(255, 0, 0)";
         ctx.textAlign = "center";
-        ctx.fillText("Game Over!", Math.round(maxX / 2), Math.round(maxY / 2));
+        ctx.fillText("Game Over!", Math.ceil(maxX/2), Math.ceil(23));
     }
 
     document.addEventListener("keydown", move);
