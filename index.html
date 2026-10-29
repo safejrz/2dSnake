@@ -65,42 +65,9 @@
         max-width: 100%;
     }
 
-    .controls {
-        display: none;
-        margin-top: 16px;
-        user-select: none;
-        -webkit-user-select: none;
-        touch-action: manipulation;
-    }
-
-    .controls .row {
-        display: flex;
-        justify-content: center;
-        gap: 8px;
-        margin-bottom: 8px;
-    }
-
-    .controls button {
-        width: 72px;
-        height: 72px;
-        font-size: 28px;
-        border-radius: 12px;
-        border: 2px solid black;
-        background: #ffe;
-        touch-action: manipulation;
-    }
-
-    .controls button.restart {
-        width: auto;
-        padding: 0 20px;
-        font-size: 18px;
-        height: 48px;
-    }
-
     .touch-only { display: none; }
 
     @media (any-pointer: coarse) {
-        .controls { display: block; width: 300px; }
         .touch-only { display: block; }
     }
 
@@ -128,18 +95,9 @@
     </p>
     <p class="instructions touch-only">
         <b>Touchscreens and phones:</b><br />
-        <b>SWIPE</b> on the game or use the <b>D-PAD</b> to move the snake to the food.<br />
-        Tap the game after Game Over or press <b>RESTART</b> to restart.
+        <b>SWIPE</b> on the game to move the snake to the food.<br />
+        <b>TAP</b> on the game to <b>RESTART</b> and retry.
     </p>
-    <div class="controls">
-        <div class="row"><button data-dir="up" aria-label="Up">▲</button></div>
-        <div class="row">
-            <button data-dir="left" aria-label="Left">◄</button>
-            <button data-dir="down" aria-label="Down">▼</button>
-            <button data-dir="right" aria-label="Right">►</button>
-        </div>
-        <div class="row"><button class="restart" data-action="restart">Restart</button></div>
-    </div>
 </body>
 
 <script>
@@ -206,7 +164,6 @@
         }
     }
 
-    const dirVectors = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
     const swipeThreshold = 30;
     let touchStart = null;
 
@@ -234,18 +191,6 @@
 
     ['pointerup', 'pointercancel'].forEach(t =>
         canvas.addEventListener(t, () => { touchStart = null; }));
-
-    document.querySelector('.controls').addEventListener('pointerdown', e => {
-        const btn = e.target.closest('button');
-        if (!btn) return;
-        e.preventDefault();
-        if (btn.dataset.action === 'restart') {
-            restartGame();
-        } else {
-            const v = dirVectors[btn.dataset.dir];
-            setDirection(v[0], v[1]);
-        }
-    });
 
     function stopGame() {
         clearInterval(titleInterval);
