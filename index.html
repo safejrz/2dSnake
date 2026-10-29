@@ -99,9 +99,12 @@
 
     .touch-only { display: none; }
 
-    @media (pointer: coarse) {
+    @media (any-pointer: coarse) {
         .controls { display: block; width: 300px; }
-        .touch-only { display: inline; }
+        .touch-only { display: block; }
+    }
+
+    @media (any-pointer: coarse) and (not (any-pointer: fine)) {
         .keyboard-only { display: none; }
     }
 </style>
@@ -118,11 +121,15 @@
     </div>
     <br />
     <br />
-    <p class="instructions">
-        <span class="keyboard-only">Use the <b>ARROWS to MOVE</b> the snake to the food.<br />
-        Use <b>SPACE to RESTART</b> the game.</span>
-        <span class="touch-only"><b>SWIPE</b> on the game or use the <b>D-PAD</b> to move the snake to the food.<br />
-        Tap the game after Game Over or use <b>RESTART</b>.</span>
+    <p class="instructions keyboard-only">
+        <b>PC and keyboard:</b><br />
+        Use the <b>ARROWS to MOVE</b> the snake to the food.<br />
+        Use <b>SPACE to RESTART</b> the game.
+    </p>
+    <p class="instructions touch-only">
+        <b>Touchscreens and phones:</b><br />
+        <b>SWIPE</b> on the game or use the <b>D-PAD</b> to move the snake to the food.<br />
+        Tap the game after Game Over or press <b>RESTART</b> to restart.
     </p>
     <div class="controls">
         <div class="row"><button data-dir="up" aria-label="Up">▲</button></div>
